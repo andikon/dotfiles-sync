@@ -77,19 +77,48 @@ Java 11+ is required. Java 17+ recommended.
 
 ---
 
-### 3. Make the wrappers executable (Unix only)
+### 3. Wrapper scripts (recommended)
 
+When embedding `dotfiles-sync` into a dotfiles repository, it is recommended to add
+small wrapper scripts at the **root of the dotfiles repo** to make usage ergonomic.
+
+These wrappers are **not part of this repository**.
+
+They simply:
+1. compile `DotfileSync.java`
+2. run it with the given command
+
+#### bash wrapper
 ```bash
-chmod +x DotfileSync.sh
+#!/usr/bin/env bash
+set -e
+
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+SRC="$ROOT/DotfileSync.java/DotfileSync.java"
+OUT="$ROOT/.dotfiles-sync"
+
+mkdir -p "$OUT"
+javac -d "$OUT" "$SRC"
+exec java -cp "$OUT" DotfileSync "$@"
 ```
 
----
+#### powershell wrapper
+```powershell
+$Root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$Src  = Join-Path (Join-Path $Root "DotfileSync.java") "DotfileSync.java"
+$Out  = Join-Path $Root ".dotfiles-sync"
+
+New-Item -ItemType Directory -Force -Path $Out | Out-Null
+javac -d $Out $Src
+java -cp $Out DotfileSync @args
+```
 
 ## Usage
 
 ### Linux / macOS / WSL / Git Bash
 
 ```bash
+chmod +x DotfileSync.sh
 ./DotfileSync.sh write
 ./DotfileSync.sh sync
 ```
@@ -176,15 +205,6 @@ Or capture local changes:
 * Existing files are overwritten
 * Missing sources are skipped
 * OS is detected automatically at runtime
-
----
-
-## Why Java?
-
-* Cross-platform
-* Strong filesystem APIs
-* Easy to extend as the tool grows
-* No shell-specific edge cases
 
 ---
 
